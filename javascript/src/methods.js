@@ -685,6 +685,7 @@ methods.addControl = function(html, position, layerId, classes) {
     onAdd: onAdd,
     onRemove: onRemove
   });
+
   this.controls.add(new Control, layerId, html);
 };
 
@@ -818,6 +819,48 @@ methods.addLegend = function(options) {
       $(div).prepend("<div style=\"margin-bottom:3px\"><strong>" +
                       options.title + "</strong></div>");
     return div;
+  };
+
+  if(options.group) {
+    // Auto generate a layerID if not provided
+    if(!options.layerId) {
+      options.layerId = L.Util.stamp(legend);
+    }
+
+    let map = this;
+    map.on("overlayadd", function(e){
+      if(e.name === options.group) {
+        map.controls.add(legend, options.layerId);
+      }
+    });
+    map.on("overlayremove", function(e){
+      if(e.name === options.group) {
+        map.controls.remove(options.layerId);
+      }
+    });
+    map.on("groupadd", function(e){
+      if(e.name === options.group) {
+        map.controls.add(legend, options.layerId);
+      }
+    });
+    map.on("groupremove", function(e){
+      if(e.name === options.group) {
+        map.controls.remove(options.layerId);
+      }
+    });
+  }
+
+  this.controls.add(legend, options.layerId);
+};
+
+methods.addCustomLegend = function(options) {
+  let legend = L.control({position: options.position});
+
+  legend.onAdd = function (map) {
+    let div = L.DomUtil.create("div", options.className);
+    this._div = div;
+    this._div.innerHTML = options.html;
+    return this._div;
   };
 
   if(options.group) {
